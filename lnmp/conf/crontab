@@ -1,8 +1,0 @@
-
-
-#67 cron
-0 0 * * *		sh /www/67/shell/daily.sh xx.com
-
-0 5 * * *		find /usr/local/mariadb/columnstore/data/bulk/log/ -mtime +3|xargs rm -f
-0 5 * * *		find /var/log/mariadb/columnstore/ -mtime +3 -type f|xargs rm -f
-0 6 * * *		find /tmp/columnstore_tmp_files/ -mtime +3|xargs rm -f
