@@ -1,0 +1,16 @@
+create lvs hash:ip
+add lvs 127.0.0.1
+
+create db hash:ip
+add db 127.0.0.1
+
+create stat hash:ip
+add stat 127.0.0.1
+
+create admin hash:ip
+add admin 127.0.0.1
+
+create company hash:ip
+add company 127.0.0.1
+
+create blacklist hash:ip
