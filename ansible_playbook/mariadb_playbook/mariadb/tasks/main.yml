@@ -1,0 +1,51 @@
+---
+- name: "install mariadb 依赖包"
+  shell: yum install -y libaio libaio-devel lsof which scons check-devel openssl-devel > /dev/null
+
+- name: "下载mariadb压缩包"
+  shell: |-
+    date ;
+    Download_dir=/usr/local/src
+    wget -O $Download_dir/mariadb-10.3.25.tar.gz https://mirrors.ustc.edu.cn/mariadb//mariadb-10.3.25/source/mariadb-10.3.25.tar.gz >/dev/null 2>&1
+
+- name: "用户创建"
+  shell: useradd mysql
+
+- name: "创建对应文件夹"
+  shell: |-
+    mkdir -p /data/mysql/{relaylog,binlog}
+    chown mysql.mysql -R /data/mysql
+
+- name: "解压及编译安装mariadb"
+  shell: |- 
+    MARIDB_HOME='/opt/serv/mysql'
+    touch /var/log/mysql_error.log
+    if [ ! -d $MARIDB_HOME ]; then
+         cd /usr/local/src && tar -xf mariadb-10.3.25.tar.gz && cd mariadb-10.3.25
+         cmake \
+         -DCMAKE_BUILD_TYPE=Release \
+         -DWITH_EMBEDDED_SERVER=OFF \
+         -DCMAKE_INSTALL_PREFIX:PATH=$MARIDB_HOME \
+         -DDEFAULT_CHARSET=utf8 \
+         -DWITH_EXTRA_CHARSETS:STRING=complex \
+         -DDEFAULT_COLLATION=utf8_general_ci \
+         -DWITH_READLINE=1 \
+         -DENABLED_LOCAL_INFILE=1 \
+         -DINSTALL_UNIX_ADDRDIR=/tmp/mariadb.sock \
+         -DMYSQL_USER=mysql > mysql.log
+        
+        make install >> mysql.log
+
+        cp support-files/mysql.server $MARIDB_HOME/mysql.server
+        chmod +x $MARIDB_HOME/mysql.server
+    fi
+
+- name: "cp配置文件"
+  template: src=my.cnf dest=/opt/serv/mysql
+
+- name: "初始化"
+  shell: |-
+    /opt/serv/mysql/scripts/mysql_install_db --basedir=/opt/serv/mysql --user=mysql --datadir=/data/mysql --defaults-file=/opt/serv/mysql/my.cnf
+
+- name: "启动mariadb"
+  shell: /opt/serv/mysql/mysql.server start

@@ -1,0 +1,53 @@
+---
+- name: "install php 依赖包"
+  shell: yum install -y epel-release cmake3 cmake libxml2-devel bzip2-devel curl-devel libjpeg-devel libpng-devel freetype-devel libxslt-devel ncurses-devel make apr* autoconf automake curl curl-devel gcc gcc-c++ zlib-devel openssl openssl-devel pcre-devel libicu-devel > /dev/null
+- name: Download pcre,openssl,zlib
+  shell: |-
+    date ;
+    Download_HOME=/usr/local/src
+    wget -O $Download_HOME/php-7.3.11.tar.gz https://download.cdn.pupuapp.cn/setups/sdk2.0/php-7.3.11.tar.gz >/dev/null
+    wget -O $Download_HOME/libzip-1.7.3.tar.gz https://libzip.org/download/libzip-1.7.3.tar.gz >/dev/null
+
+- name: tar -xvf files
+  shell: |-
+    cd /usr/local/src
+    for file in `ls .`;do
+        tar -xf $file
+    done 
+
+- name: "make && make install libzip"
+  shell: |-
+    cd /usr/local/src/libzip-1.7.3 && mkdir build && cd build && cmake3 .. && make && make install
+- name: "动态链接库生效"
+  shell: |-
+    echo -e '/usr/local/lib64 \n/usr/local/lib \n/usr/lib \n/usr/lib64'>>/etc/ld.so.conf && ldconfig -v
+
+- name: Install php
+  shell: |-
+    Download_HOME=/usr/local/src
+    PREFIX=/opt/serv/php-7.3
+    if [ ! -d $PREFIX ]; then
+        cd /usr/local/src/php-7.3.11
+        ./configure --prefix=$PREFIX --with-config-file-path=$PREFIX/etc --with-fpm-user=www --with-fpm-group=www --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd --with-freetype-dir --with-jpeg-dir --with-png-dir --with-zlib --with-libxml-dir --with-pear --with-gettext --with-curl --with-xmlrpc --with-openssl --with-mhash --with-gd --enable-fpm --enable-mysqlnd --enable-mysqlnd-compression-support --enable-xml --enable-rpath --enable-bcmath --enable-inline-optimization --enable-mbregex --enable-mbstring --enable-intl --enable-ftp --enable-gd-jis-conv --enable-pcntl --enable-sockets --enable-calendar --enable-zip --enable-soap --enable-fileinfo --enable-opcache --enable-maintainer-zts > $Download_HOME/nginx.log
+        
+        make -j2 && make install
+
+        cp sapi/fpm/init.d.php-fpm $PREFIX/fpm
+        chmod a+x $PREFIX/fpm
+        ln -sf $PREFIX/bin/php /bin/php
+        ln -sf $PREFIX/fpm /sbin/fpm
+
+    fi
+
+- name: Copy conf
+  template: src=php.ini dest=/opt/serv/php-7.3/etc/php.ini
+
+- name: Copy conf
+  template: src=php-fpm.conf dest=/opt/serv/php-7.3/etc/php-fpm.conf
+
+- name: start fpm
+  shell: fpm start
+
+- name: rm Download file
+  shell: rm -rf /usr/local/src/*
+

@@ -1,0 +1,45 @@
+---
+- name: Download pcre,openssl,zlib
+  shell: |-
+    date ;
+    Download_HOME=/usr/local/src
+    wget -O $Download_HOME/pcre-8.44.tar.gz https://udomain.dl.sourceforge.net/project/pcre/pcre/8.44/pcre-8.44.tar.gz >/dev/null 2>&1
+    wget -O $Download_HOME/openssl-1.1.1h.tar.gz https://www.openssl.org/source/openssl-1.1.1h.tar.gz >/dev/null 2>&1
+    wget -O $Download_HOME/zlib-1.2.11.tar.gz https://udomain.dl.sourceforge.net/project/libpng/zlib/1.2.11/zlib-1.2.11.tar.gz >/dev/null 2>&1
+    wget -O $Download_HOME/nginx-1.18.0.tar.gz http://nginx.org/download/nginx-1.18.0.tar.gz >/dev/null 2>&1
+
+- name: tar -xvf files
+  shell: |-
+    cd /usr/local/src
+    for file in `ls .`;do
+        tar -xf $file
+    done 
+
+- name: Install nginx
+  shell: |-
+    Download_HOME=/usr/local/src
+    PREFIX=/opt/serv/
+    if [ ! -d $PREFIX ]; then
+        cd /usr/local/src/nginx-1.18.0
+        ./configure --prefix=$PREFIX/nginx --user=$USER --group=$USER \
+        --with-pcre=$Download_HOME/pcre-8.44 \
+        --with-openssl=$Download_HOME/openssl-1.1.1h \
+        --with-zlib=$Download_HOME/zlib-1.2.11 \
+        --with-http_sub_module \
+        --with-http_v2_module \
+        --with-http_gzip_static_module \
+        --with-http_stub_status_module --with-http_ssl_module > $Download_HOME/nginx.log
+
+        make > $Download_HOME/nginx.log && make install > $Download_HOME/nginx.log
+
+        ln -sf $PREFIX/nginx/sbin/nginx /sbin/nginx
+    fi
+
+- name: Copy conf
+  template: src=nginx.conf dest=/opt/serv/nginx/conf/nginx.conf
+
+- name: start nginx
+  shell: nginx 
+
+- name: rm Download file
+  shell: rm -rf /usr/local/src/*

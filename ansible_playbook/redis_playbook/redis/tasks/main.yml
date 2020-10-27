@@ -1,0 +1,30 @@
+---
+- name: Download redis
+  shell: date ; wget -c https://download.cdn.pupuapp.cn/setups/sdk2.0/redis-5.0.7.tar.gz >/dev/null 2>&1
+
+- name: Install redis
+  shell: |- 
+    REDIS_HOME='/usr/local/redis'
+    REDIS_VERSION='5.0.7'
+    if [ ! -d $REDIS_HOME ]; then
+         yum install -y gcc-c++ >/dev/null 2>&1
+         tar -xvf redis-$REDIS_VERSION.tar.gz
+         cd redis-$REDIS_VERSION && make >/dev/null && make PREFIX=$REDIS_HOME install
+         cd .. && rm -f redis-$REDIS_VERSION.tar.gz && rm -rf redis-$REDIS_VERSION
+    fi
+
+- name: Copy conf
+  template: src=redis.conf dest=/usr/local/redis/redis.conf
+
+- name: start redis
+  shell: |- 
+    date
+    useradd redis
+    mkdir -p /var/log/redis
+    mkdir -p /data/redis
+    chown redis.redis -R /usr/local/redis
+    chown redis.redis -R /var/log/redis
+    chown redis.redis -R /data/redis
+    chmod g+w -R /data/redis
+    su redis -c "/usr/local/redis/bin/redis-server /usr/local/redis/redis.conf &"
+
