@@ -1,0 +1,20 @@
+---
+- name: Download jdk tar.gz
+  shell: date ; wget -c https://download.java.net/java/GA/jdk15.0.1/51f4f36ad4ef43e39d0dfdbaf6549e32/9/GPL/openjdk-15.0.1_linux-x64_bin.tar.gz >/dev/null 2>&1
+
+- name: Install jdk
+  shell: |- 
+    JAVA_HOME='/usr/local/jdk'
+    if [ ! -d $JAVA_HOME ]; then
+         tar -xvf openjdk-15.0.1_linux-x64_bin.tar.gz 
+         mv jdk-15.0.1 $JAVA_HOME
+    fi
+
+- name: echo config in /etc/profile
+  shell: |- 
+    echo "export JAVA_HOME=/usr/local/jdk  
+          export  PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile
+
+- name: Refresh configuration
+  shell: |-
+    source /etc/profile
