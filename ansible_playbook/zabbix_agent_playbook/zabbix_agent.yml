@@ -1,0 +1,31 @@
+---
+- hosts: 192.168.0.13
+  remove_user: root
+
+  tasks:
+    - name: install gcc pkg
+      yum: 
+        name: gcc-c++
+        state: latest
+    - name: Download zabbix-agent
+      shell: |-
+        date ;
+        Download_dir=/usr/local/src 
+        wget -O $Download_HOME/zabbix-4.0.9.tar.gz https://download.cdn.pupuapp.cn/test/zabbix-4.0.9.tar.gz > /dev/null
+        cd $Download_dir && tar -xf zabbix-4.0.9.tar.gz
+    - name: create zabbix user
+      user:
+        name: zabbix
+        comment: Monitor User
+        group: zabbix
+        shell: /sbin/nologin
+    - name: install zabbix_agent
+      shell: cd /usr/local/src/zabbix-4.0.9 && ./configure --enable-agent --prefix=/usr/local/zabbix-4.0-agentd && make -j 4 && make install
+    - name: copy config zabbix_agent
+      template: src=zabbix_agentd.conf dest=/usr/local/zabbix-4.0-agentd/etc/zabbix_agentd.conf
+    - name: copy zabbix_agent start file
+      template: src=zabbix_agentd dest=/etc/init.d/zabbix_agentd
+    - name: chmod +x start file
+      shell: "chmod +x /etc/init.d/zabbix_agentd"
+    - name: start zabbix_agent
+      shell: /etc/init.d/zabbix_agentd start

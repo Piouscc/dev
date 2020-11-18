@@ -1,0 +1,38 @@
+#集群名称
+cluster.name: my-es-application
+#主机名称
+node.name: #NAME#
+#主节点
+node.master: true
+#数据节点
+node.data: true
+#日志及数据路径
+path.data: /data/elasticsearch/data
+path.logs: /data/elasticsearch/log
+#本地IP及端口
+network.host: #IP#
+http.port: 9200
+
+#设置这个参数来保证集群中的节点可以知道其它N个有master资格的节点。默认为1，对于大的集群来说，可以设置大一点的值（2-4）
+discovery.zen.minimum_master_nodes: 3
+
+cluster.initial_master_nodes: ["192.168.0.12","192.168.0.13","192.168.0.17"]
+
+#自动发现设置，配置之后集群的主机之间可以自动发现。
+discovery.seed_hosts: ["192.168.0.12","192.168.0.13","192.168.0.17"]
+
+#是否支持跨域，默认为false
+http.cors.enabled: true
+#当设置允许跨域，默认为*,表示支持所有域名，
+http.cors.allow-origin: "*"
+
+#默认为false，这项使用默认配置，会导致硬盘频繁读，IOPS变高。设置true锁定物理内存地址，防止es内存被交换出去，也就是避免es使用swap交换分区。
+bootstrap.memory_lock: true
+#开启seccomp安全机制，seccomp能使一个进程进入到一种“安全”运行模式，该模式下的进程只能调用4种系统调用（system call），即 read(), write(), exit() 和 sigreturn()，否则进程便会被终止。
+#centos6.x操作系统不支持SecComp只能为false，centos7.x操作系统可以设置成true
+bootstrap.system_call_filter: true
+
+#默认值是false，如果设置为true，那么就不允许将一个primary shard和replica shard分配到同一个物理机上，也许这个物理机上启动了多个es实例。
+cluster.routing.allocation.same_shard.host: true
+#设置一台机子能运行的节点数目，一般采用默认的1即可，因为我们一般也只在一台机子上部署一个节点。
+node.max_local_storage_nodes: 1
